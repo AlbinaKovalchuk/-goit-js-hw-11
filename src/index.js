@@ -45,8 +45,10 @@ window.addEventListener('scroll', formSticky);
 function onSearch(e) {
   e.preventDefault();
   pageLoadStatus.hide();
-
-  postApiService.query = e.target.searchQuery.value.trim();
+  postApiService.query = e.currentTarget.elements.searchQuery.value.trim();
+  if (postApiService.query === '') {
+    return Notify.info(`Enter a word to search for images.`);
+  }
 
   loadMoreBtn.show();
   postApiService.resetPage();
