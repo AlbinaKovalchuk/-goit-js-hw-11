@@ -23,7 +23,7 @@ export default class PostsApiService {
 
     try {
       const response = await axios.get(`${BASE_URL}?${OPTIONS.toString()}`);
-      this.incrementPage();
+      this.nextPage();
       return response.data;
     } catch (error) {
       console.error(error.toJSON());
@@ -46,7 +46,7 @@ export default class PostsApiService {
     this.totalHits = newTotalHits;
   }
 
-  incrementPage() {
+  nextPage() {
     this.page += 1;
   }
 

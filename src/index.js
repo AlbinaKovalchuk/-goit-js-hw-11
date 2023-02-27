@@ -4,7 +4,6 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 import PostApiService from './js/posts-servise';
 import LoadMoreBtn from './js/load-more-btn';
-import PageLoadStatus from './js/load-status';
 import formSticky from './js/form-sticky';
 
 // get elements
@@ -17,24 +16,18 @@ const refs = {
 const loadMoreBtn = new LoadMoreBtn({
   selector: '.load-more',
   hidden: true,
+ 
 });
 
-const pageLoadStatus = new PageLoadStatus({
-  selector: '.page-load-status',
-});
 
 const postApiService = new PostApiService();
+
 const lightbox = new SimpleLightbox('.gallery__item', {
   captionDelay: 250,
   captionsData: 'alt',
   enableKeyboard: true,
 });
-const obsOptions = {
-  root: null,
-  rootMargin: '100px',
-  treshold: 1,
-};
-const observer = new IntersectionObserver(onLoading, obsOptions);
+
 
 // Make add event listener
 refs.formSearch.addEventListener('submit', onSearch);
@@ -43,55 +36,58 @@ window.addEventListener('scroll', formSticky);
 
 // Event search btn
 function onSearch(e) {
+
   e.preventDefault();
-  pageLoadStatus.hide();
-  postApiService.query = e.currentTarget.elements.searchQuery.value.trim();
+  const form = e.currentTarget;
+ 
+  postApiService.query = form.elements.searchQuery.value.trim(); //+
+
+
   if (postApiService.query === '') {
     return Notify.info(`Enter a word to search for images.`);
   }
-
-  loadMoreBtn.show();
-  postApiService.resetPage();
-  clearGallery();
-  fetchPosts();
+ 
+ postApiService.resetPage(); 
+clearGallery();
+fetchPosts();
 }
 
 function onLoadMore() {
+  loadMoreBtn.hide();
   fetchPosts();
-  pageLoadStatus.show();
-  observer.observe(pageLoadStatus.refs.pageLoadStatus);
+  loadMoreBtn.show();
+  
 }
 
 // Get posts
 function fetchPosts() {
-  loadMoreBtn.hide();
-  pageLoadStatus.enable();
+   loadMoreBtn.hide();
 
-  postApiService.fetchPost().then(data => {
+   postApiService.fetchPost().then(data => {
     const currentPage = postApiService.page - 1;
-    postApiService.hits = data.totalHits;
 
     if (!data.totalHits) {
-      loadMoreBtn.hide();
-      pageLoadStatus.errorShow();
-      return Notify.failure(
+      // images not found
+        return Notify.failure(
         'Sorry, there are no images matching your search query. Please try again.'
       );
     }
 
     if (!data.hits.length) {
       loadMoreBtn.hide();
-      pageLoadStatus.lastElemShow();
-      return Notify.info(
+      // end of search
+       return Notify.info(
         `We're sorry, but you've reached the end of search results.`
       );
     }
+   
     renderPost(data.hits);
+
     if (currentPage === 1) {
-      Notify.success(`Hooray! We found ${postApiService.hits} images.`);
+      Notify.success(`Hooray! We found ${data.totalHits} images.`);
       loadMoreBtn.show();
     }
-    pageLoadStatus.enable();
+
   });
 }
 
@@ -131,10 +127,3 @@ function clearGallery() {
   refs.gallery.innerHTML = '';
 }
 
-async function onLoading(entries) {
-  await entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      fetchPosts();
-    }
-  });
-}
