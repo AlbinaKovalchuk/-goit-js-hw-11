@@ -49,6 +49,8 @@ function onSearch(e) {
  
  postApiService.resetPage(); 
 clearGallery();
+//  тут зробити перевірку - порівняти номер поточної сторінки з максимально можливою кількістю ( totalHit/40 -page??)
+// якщо це максимум -то більше не робити запит(return) та скрити кнопку Load more   
 fetchPosts();
 }
 
