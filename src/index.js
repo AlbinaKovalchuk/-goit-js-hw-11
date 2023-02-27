@@ -65,10 +65,7 @@ function fetchPosts() {
     // console.log("currentPage", currentPage)//++ номеер текущий страницы
     // console.log("data.totalHits",data.totalHits) // всего картинок 
     // console.log('totalPages',totalPages) 
-        if (currentPage > 1 && currentPage === totalPages) {
-          loadMoreBtn.hide()
-         return alertEndOfSearch();
-       }
+        
 
     if (!data.totalHits) {
       // images not found
@@ -82,6 +79,11 @@ function fetchPosts() {
     }
 // ------------------------------
     renderPost(data.hits);
+
+    if (currentPage > 1 && currentPage === totalPages) {
+      loadMoreBtn.hide()
+      return alertEndOfSearch();
+   }
 
     if (currentPage === 1) {
       // images found
