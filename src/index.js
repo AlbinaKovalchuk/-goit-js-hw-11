@@ -46,16 +46,12 @@ function onSearch(e) {
   postApiService.resetPage();
   clearGallery();
 
-  //  тут зробити перевірку - порівняти номер поточної сторінки з максимально можливою кількістю ( totalHit/40 -page??)
-  // якщо це максимум -то більше не робити запит(return) та скрити кнопку Load more
-
   fetchPosts();
 }
 
 function onLoadMore() {
   loadMoreBtn.hide();
   fetchPosts();
-  // чи ось тут перевырку
   loadMoreBtn.show();
 }
 
@@ -65,27 +61,34 @@ function fetchPosts() {
 
   postApiService.fetchPost().then(data => {
     const currentPage = postApiService.page - 1;
+    const totalPages = Math.ceil(data.totalHits / 40);
+    // console.log("currentPage", currentPage)//++ номеер текущий страницы
+    // console.log("data.totalHits",data.totalHits) // всего картинок 
+    // console.log('totalPages',totalPages) 
+        if (currentPage > 1 && currentPage === totalPages) {
+          loadMoreBtn.hide()
+         return alertEndOfSearch();
+       }
 
     if (!data.totalHits) {
-      console.log('!data.totalHits', !data.totalHits);
       // images not found
       return alertNoImagesFound();
     }
-
+// ---------------------------------
     if (!data.hits.length) {
       // end of searchQuery
       loadMoreBtn.hide();
       return alertEndOfSearch();
     }
-
+// ------------------------------
     renderPost(data.hits);
 
     if (currentPage === 1) {
       // images found
       alertImagesFound(data);
-    //  если нашлось 40 и меньше то не показывать кнопку 
-      if (data.totalHits<= 40){
-        // console.log("нашлось меньше 40 картинок!", data.totalHits)
+
+      //  если нашлось 40 и меньше то не показывать кнопку loadMore
+      if (data.totalHits<= 40) {
          loadMoreBtn.hide();  
          return;
       }
