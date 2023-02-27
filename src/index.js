@@ -16,9 +16,7 @@ const refs = {
 const loadMoreBtn = new LoadMoreBtn({
   selector: '.load-more',
   hidden: true,
- 
 });
-
 
 const postApiService = new PostApiService();
 
@@ -28,68 +26,71 @@ const lightbox = new SimpleLightbox('.gallery__item', {
   enableKeyboard: true,
 });
 
-
 // Make add event listener
 refs.formSearch.addEventListener('submit', onSearch);
 loadMoreBtn.refs.button.addEventListener('click', onLoadMore);
 window.addEventListener('scroll', formSticky);
 
+// __________________________________________________________________
 // Event search btn
 function onSearch(e) {
-
   e.preventDefault();
   const form = e.currentTarget;
- 
+
   postApiService.query = form.elements.searchQuery.value.trim(); //+
 
-
   if (postApiService.query === '') {
-    return Notify.info(`Enter a word to search for images.`);
+    return  alertNoEmptySearch();
   }
- 
- postApiService.resetPage(); 
-clearGallery();
-//  тут зробити перевірку - порівняти номер поточної сторінки з максимально можливою кількістю ( totalHit/40 -page??)
-// якщо це максимум -то більше не робити запит(return) та скрити кнопку Load more   
-fetchPosts();
+
+  postApiService.resetPage();
+  clearGallery();
+
+  //  тут зробити перевірку - порівняти номер поточної сторінки з максимально можливою кількістю ( totalHit/40 -page??)
+  // якщо це максимум -то більше не робити запит(return) та скрити кнопку Load more
+
+  fetchPosts();
 }
 
 function onLoadMore() {
   loadMoreBtn.hide();
   fetchPosts();
+  // чи ось тут перевырку
   loadMoreBtn.show();
-  
 }
 
 // Get posts
 function fetchPosts() {
-   loadMoreBtn.hide();
+  loadMoreBtn.hide();
 
-   postApiService.fetchPost().then(data => {
+  postApiService.fetchPost().then(data => {
     const currentPage = postApiService.page - 1;
 
     if (!data.totalHits) {
+      console.log('!data.totalHits', !data.totalHits);
       // images not found
-        return Notify.failure(
-        'Sorry, there are no images matching your search query. Please try again.'
-      );
+      return alertNoImagesFound();
     }
 
     if (!data.hits.length) {
+      // end of searchQuery
       loadMoreBtn.hide();
-      // end of search
-       return Notify.info(
-        `We're sorry, but you've reached the end of search results.`
-      );
+      return alertEndOfSearch();
     }
-   
+
     renderPost(data.hits);
 
     if (currentPage === 1) {
-      Notify.success(`Hooray! We found ${data.totalHits} images.`);
+      // images found
+      alertImagesFound(data);
+    //  если нашлось 40 и меньше то не показывать кнопку 
+      if (data.totalHits<= 40){
+        // console.log("нашлось меньше 40 картинок!", data.totalHits)
+         loadMoreBtn.hide();  
+         return;
+      }
       loadMoreBtn.show();
     }
-
   });
 }
 
@@ -129,3 +130,23 @@ function clearGallery() {
   refs.gallery.innerHTML = '';
 }
 
+// ---------------------------------------------alert-----------------
+function alertImagesFound(data) {
+  Notify.success(`Hooray! We found ${data.totalHits} images.`);
+}
+
+function alertNoEmptySearch() {
+  Notify.failure(
+    'The search string cannot be empty. Please specify your search query.'
+  );
+}
+
+function alertNoImagesFound() {
+  Notify.failure(
+    'Sorry, there are no images matching your search query. Please try again.'
+  );
+}
+
+function alertEndOfSearch() {
+  Notify.info("We're sorry, but you've reached the end of search results.");
+}
